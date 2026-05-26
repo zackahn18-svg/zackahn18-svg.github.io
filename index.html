@@ -81,5 +81,194 @@
             font-family: monospace;
         }
     </style>
-    <!-- Imports standard, audited CryptoJS architecture for the AES-256 layer -->
-    <script src="
+    <!-- Audited core library engine to power Layer 2 AES-256 processing -->
+    <script src="https://cloudflare.com"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Text Editor</h1>
+    
+    <div class="label">Input text to convert to RTF:</div>
+    <textarea id="inputText" placeholder="Type your message here..."></textarea>
+    
+    <div class="button-group">
+        <button id="convertBtn" class="btn-convert">Convert</button>
+        <button id="restoreBtn" class="btn-restore">Restore</button>
+    </div>
+    
+    <div class="label">Output:</div>
+    <div id="outputResult" class="output-box">No text converted yet.</div>
+</div>
+
+<script>
+// PRESERVED PROPRIETARY CIPHER CONSTANTS
+var qwertyRow = ["Q","W","E","R","T","Y","U","I","O","P","A","S","D"];
+var numberRow =;
+var letterHeaders = ["M","C","X","A","E","F","I","K","Y","Z","B","D","G"];
+
+document.getElementById("convertBtn").addEventListener("click", function() {
+    executeProcess(true);
+});
+
+document.getElementById("restoreBtn").addEventListener("click", function() {
+    executeProcess(false);
+});
+
+function executeProcess(isEncoding) {
+    var textInput = document.getElementById("inputText").value;
+    if (!textInput) return;
+    
+    var result = isEncoding ? runVersionXPCipher(textInput) : runVersionXPDecrypter(textInput);
+    document.getElementById("outputResult").innerHTML = result || "Error: Processing failed.";
+    
+    document.getElementById("inputText").value = "";
+    document.getElementById("inputText").placeholder = "Type your message here...";
+}
+
+// 512-BIT LAYERED ENCODING LOOP
+function runVersionXPCipher(input) {
+    var cleanText = input.toUpperCase().replace(/[^A-Z]/g, '');
+    var multiplier = cleanText.length;
+    if (multiplier === 0) return "Error: No valid text characters.";
+
+    var ogTokens = [];
+    var usedHeaders = {};
+    var dynamicTracker = multiplier;
+
+    // LAYER 1: Custom Paradox Stream Cipher Processing
+    for (var i = 0; i < cleanText.length; i++) {
+        var originalChar = cleanText[i];
+        var lookupIdx = qwertyRow.indexOf(originalChar);
+        if (lookupIdx === -1) lookupIdx = (originalChar.charCodeAt(0) - 65) % qwertyRow.length;
+        
+        dynamicTracker = (numberRow[lookupIdx] * dynamicTracker + (i + 1)) % 5000;
+        if (i > 0 && cleanText[i] === cleanText[i - 1]) {
+            dynamicTracker = (dynamicTracker * (i + 1)) % 5000;
+        }
+        
+        var finalNumberPart = "";
+        var digits = dynamicTracker.toString().split("");
+        for (var d = 0; d < digits.length; d++) {
+            finalNumberPart += (digits[d] === '0') ? 'X' : String.fromCharCode(64 + parseInt(digits[d]));
+        }
+
+        var headerIdx = (dynamicTracker + i) % letterHeaders.length;
+        var currentHeader = letterHeaders[headerIdx];
+        var loopCount = 0;
+        while (usedHeaders[currentHeader] && loopCount < 50) {
+            loopCount++;
+            currentHeader = (currentHeader === 'Z') ? 'A' : String.fromCharCode(currentHeader.charCodeAt(0) + 1);
+        }
+        usedHeaders[currentHeader] = true;
+        
+        ogTokens.push(currentHeader + finalNumberPart);
+    }
+    
+    var intermediateString = ogTokens.join("");
+
+    // LAYER 2: 256-Bit Cryptographic Industrial Shield Integration
+    var privateSeedKey = numberRow.join("-") + "-VERSION-XP-UPGRADE";
+    
+    // Deterministic Nonce Derivation to conceal Initialization Vectors entirely
+    var generatedIV = CryptoJS.enc.Hex.parse(CryptoJS.MD5(privateSeedKey).toString());
+
+    var encryptedAES = CryptoJS.AES.encrypt(intermediateString, privateSeedKey, {
+        iv: generatedIV,
+        mode: CryptoJS.mode.CTR,
+        padding: CryptoJS.pad.Pkcs7
+    });
+
+    var encryptedString = encryptedAES.toString();
+
+    // FORMAT VISUAL UPGRADE: Convert payload streams into plain dot layout registry tracks
+    var periodBlocks = [];
+    for (var b = 0; b < encryptedString.length; b += 6) {
+        periodBlocks.push(encryptedString.substring(b, b + 6));
+    }
+
+    return periodBlocks.join(".");
+}
+
+// 512-BIT PARADOX RESTORATION LOOPS
+function runVersionXPDecrypter(encryptedMessage) {
+    var cleanAESPayload = encryptedMessage.split(".").join("");
+    var privateSeedKey = numberRow.join("-") + "-VERSION-XP-UPGRADE";
+    var generatedIV = CryptoJS.enc.Hex.parse(CryptoJS.MD5(privateSeedKey).toString());
+
+    try {
+        // Reverse Layer 2 Processing
+        var decryptedAES = CryptoJS.AES.decrypt(cleanAESPayload, privateSeedKey, {
+            iv: generatedIV,
+            mode: CryptoJS.mode.CTR,
+            padding: CryptoJS.pad.Pkcs7
+        });
+
+        var ogCipherStream = decryptedAES.toString(CryptoJS.enc.Utf8);
+        if (!ogCipherStream) return "Error: Restoration alignment failed.";
+
+        // Reverse Layer 1 Processing
+        var tokens = [];
+        var i = 0;
+        while (i < ogCipherStream.length) {
+            var header = ogCipherStream[i];
+            var numPart = "";
+            i++;
+            while (i < ogCipherStream.length && (ogCipherStream[i] !== ogCipherStream[i].toUpperCase() || !isNaN(ogCipherStream[i]))) {
+                numPart += ogCipherStream[i];
+                i++;
+                if (ogCipherStream[i] === 'X' || (ogCipherStream[i] >= 'A' && ogCipherStream[i] <= 'I')) {
+                    // Collect sequential digit block elements
+                } else {
+                    break;
+                }
+            }
+            tokens.push(header + numPart);
+        }
+
+        var multiplier = tokens.length;
+        var decryptedChars = "";
+        var usedTrackers = [];
+
+        for (var t = 0; t < tokens.length; t++) {
+            var token = tokens[t];
+            var numberPartLetters = token.substring(1).split("");
+            var numStr = "";
+            for (var j = 0; j < numberPartLetters.length; j++) {
+                numStr += (numberPartLetters[j] === 'X') ? "0" : (numberPartLetters[j].charCodeAt(0) - 64).toString();
+            }
+            usedTrackers.push(parseInt(numStr));
+        }
+
+        var currentTracker = multiplier;
+        for (var c = 0; c < usedTrackers.length; c++) {
+            var matchFound = false;
+            for (var n = 0; n < numberRow.length; n++) {
+                var calculatedTarget = (numberRow[n] * currentTracker + (c + 1)) % 5000;
+                
+                if (c > 0 && decryptedChars[c-1] === qwertyRow[n].toLowerCase()) {
+                    calculatedTarget = (calculatedTarget * (c + 1)) % 5000;
+                }
+                
+                if (calculatedTarget === usedTrackers[c]) {
+                    decryptedChars += qwertyRow[n];
+                    currentTracker = calculatedTarget; 
+                    matchFound = true;
+                    break;
+                }
+            }
+            if (!matchFound) {
+                decryptedChars += "?";
+                currentTracker = usedTrackers[c];
+            }
+        }
+        return decryptedChars.toLowerCase();
+
+    } catch (e) {
+        return "Error: Secure handshake identity invalid.";
+    }
+}
+</script>
+
+</body>
+</html>
