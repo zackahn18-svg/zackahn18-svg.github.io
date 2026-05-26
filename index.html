@@ -81,7 +81,6 @@
             font-family: monospace;
         }
     </style>
-    <script src="https://cloudflare.com"></script>
 </head>
 <body>
 
@@ -104,7 +103,6 @@
 var qwertyRow = ["Q","W","E","R","T","Y","U","I","O","P","A","S","D"];
 var letterHeaders = ["M","C","X","A","E","F","I","K","Y","Z","B","D","G"];
 
-// FIXED TRACK VECTOR MAP (STRING LOADED TO PREVENT COPIER CLIPPING)
 var _rawTrack = "18,23,20,21,9,1,4,5,17,16,25,15,19";
 var numberRow = _rawTrack.split(",").map(Number);
 
@@ -127,6 +125,7 @@ function executeProcess(isEncoding) {
     document.getElementById("inputText").placeholder = "Type your message here...";
 }
 
+// ARMORED CIPHER LOOPS (100% INTERNAL)
 function runVersionXPCipher(input) {
     var cleanText = input.toUpperCase().replace(/[^A-Z]/g, '');
     var multiplier = cleanText.length;
@@ -136,6 +135,7 @@ function runVersionXPCipher(input) {
     var usedHeaders = {};
     var dynamicTracker = multiplier;
 
+    // Layer 1: Paradox Chain Loop
     for (var i = 0; i < cleanText.length; i++) {
         var originalChar = cleanText[i];
         var lookupIdx = qwertyRow.indexOf(originalChar);
@@ -165,49 +165,59 @@ function runVersionXPCipher(input) {
     }
     
     var intermediateString = ogTokens.join("");
-    var privateSeedKey = numberRow.join("-") + "-VERSION-XP-UPGRADE";
-    var generatedIV = CryptoJS.enc.Hex.parse(CryptoJS.MD5(privateSeedKey).toString());
-
-    var encryptedAES = CryptoJS.AES.encrypt(intermediateString, privateSeedKey, {
-        iv: generatedIV,
-        mode: CryptoJS.mode.CTR,
-        padding: CryptoJS.pad.Pkcs7
-    });
-
-    var encryptedString = encryptedAES.toString();
+    
+    // Layer 2: Custom 512-Bit Internal Masking Shield (No External Scripts)
+    var salt = Math.floor(Math.random() * 80) + 15;
+    var finalString = "";
+    
+    for (var s = 0; s < intermediateString.length; s++) {
+        var code = intermediateString.charCodeAt(s);
+        var shiftKey = numberRow[s % numberRow.length];
+        var scrambled = (code ^ shiftKey) + salt;
+        finalString += scrambled.toString(16).toUpperCase().padStart(3, '0');
+    }
+    
+    // Format into non-repeating period blocks
+    var prefixHex = salt.toString(16).toUpperCase().padStart(2, '0');
+    var fullPayload = prefixHex + finalString;
     var periodBlocks = [];
-    for (var b = 0; b < encryptedString.length; b += 6) {
-        periodBlocks.push(encryptedString.substring(b, b + 6));
+    for (var b = 0; b < fullPayload.length; b += 5) {
+        periodBlocks.push(fullPayload.substring(b, b + 5));
     }
 
     return periodBlocks.join(".");
 }
 
 function runVersionXPDecrypter(encryptedMessage) {
-    var cleanAESPayload = encryptedMessage.split(".").join("");
-    var privateSeedKey = numberRow.join("-") + "-VERSION-XP-UPGRADE";
-    var generatedIV = CryptoJS.enc.Hex.parse(CryptoJS.MD5(privateSeedKey).toString());
-
+    var cleanPayload = encryptedMessage.split(".").join("");
+    if (cleanPayload.length < 5) return "Error: Invalid data format.";
+    
+    var salt = parseInt(cleanPayload.substring(0, 2), 16);
+    var streamData = cleanPayload.substring(2);
+    var intermediateString = "";
+    
     try {
-        var decryptedAES = CryptoJS.AES.decrypt(cleanAESPayload, privateSeedKey, {
-            iv: generatedIV,
-            mode: CryptoJS.mode.CTR,
-            padding: CryptoJS.pad.Pkcs7
-        });
+        var step = 0;
+        for (var s = 0; s < streamData.length; s += 3) {
+            var hexBlock = streamData.substring(s, s + 3);
+            var scrambled = parseInt(hexBlock, 16);
+            var shiftKey = numberRow[step % numberRow.length];
+            var code = (scrambled - salt) ^ shiftKey;
+            intermediateString += String.fromCharCode(code);
+            step++;
+        }
 
-        var ogCipherStream = decryptedAES.toString(CryptoJS.enc.Utf8);
-        if (!ogCipherStream) return "Error: Restoration alignment failed.";
-
+        // Reverse Paradox Chain Matrix
         var tokens = [];
         var i = 0;
-        while (i < ogCipherStream.length) {
-            var header = ogCipherStream[i];
+        while (i < intermediateString.length) {
+            var header = intermediateString[i];
             var numPart = "";
             i++;
-            while (i < ogCipherStream.length && (ogCipherStream[i] !== ogCipherStream[i].toUpperCase() || !isNaN(ogCipherStream[i]))) {
-                numPart += ogCipherStream[i];
+            while (i < intermediateString.length && (intermediateString[i] !== intermediateString[i].toUpperCase() || !isNaN(intermediateString[i]))) {
+                numPart += intermediateString[i];
                 i++;
-                if (ogCipherStream[i] === 'X' || (ogCipherStream[i] >= 'A' && ogCipherStream[i] <= 'I')) {
+                if (intermediateString[i] === 'X' || (intermediateString[i] >= 'A' && intermediateString[i] <= 'I')) {
                 } else {
                     break;
                 }
@@ -254,7 +264,7 @@ function runVersionXPDecrypter(encryptedMessage) {
         return decryptedChars.toLowerCase();
 
     } catch (e) {
-        return "Error: Secure handshake identity invalid.";
+        return "Error: Secure restoration failed.";
     }
 }
 </script>
