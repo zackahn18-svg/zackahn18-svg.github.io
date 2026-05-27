@@ -100,171 +100,124 @@
 </div>
 
 <script>
-var qwertyRow = ["Q","W","E","R","T","Y","U","I","O","P","A","S","D"];
-var letterHeaders = ["M","C","X","A","E","F","I","K","Y","Z","B","D","G"];
+// Your hardcoded sequence acts as the Master Seed phrase for key derivation
+var _masterSeed = "18-23-20-21-9-1-4-5-17-16-25-15-19";
 
-var _rawTrack = "18,23,20,21,9,1,4,5,17,16,25,15,19";
-var numberRow = _rawTrack.split(",").map(Number);
-
-document.getElementById("convertBtn").addEventListener("click", function() {
-    executeProcess(true);
+document.getElementById("convertBtn").addEventListener("click", async function() {
+    await executeProcess(true);
 });
 
-document.getElementById("restoreBtn").addEventListener("click", function() {
-    executeProcess(false);
+document.getElementById("restoreBtn").addEventListener("click", async function() {
+    await executeProcess(false);
 });
 
-function executeProcess(isEncoding) {
+async function executeProcess(isEncoding) {
     var textInput = document.getElementById("inputText").value;
     if (!textInput) return;
     
-    var result = isEncoding ? runVersionXPCipher(textInput) : runVersionXPDecrypter(textInput);
-    document.getElementById("outputResult").innerHTML = result || "Error: Processing failed.";
+    var result;
+    try {
+        result = isEncoding ? await runQuantumCipher(textInput) : await runQuantumDecrypter(textInput);
+    } catch (e) {
+        result = "Error: Processing alignment failed.";
+    }
     
+    document.getElementById("outputResult").innerHTML = result;
     document.getElementById("inputText").value = "";
     document.getElementById("inputText").placeholder = "Type your message here...";
 }
 
-// ARMORED CIPHER LOOPS (100% INTERNAL)
-function runVersionXPCipher(input) {
-    var cleanText = input.toUpperCase().replace(/[^A-Z]/g, '');
-    var multiplier = cleanText.length;
-    if (multiplier === 0) return "Error: No valid text characters.";
+// Helper function to turn strings into bytes
+function textToBytes(text) {
+    return new TextEncoder().encode(text);
+}
 
-    var ogTokens = [];
-    var usedHeaders = {};
-    var dynamicTracker = multiplier;
+// Native hardware key generator (PBKDF2 with 100,000 computation rounds)
+async function deriveCryptographicKey() {
+    var baseKey = await crypto.subtle.importKey(
+        "raw", 
+        textToBytes(_masterSeed), 
+        { name: "PBKDF2" }, 
+        false, 
+        ["deriveKey"]
+    );
+    
+    var salt = textToBytes("WANNABE-XP-SALT-PROTECT");
+    
+    return await crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+        baseKey,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
 
-    // Layer 1: Paradox Chain Loop
-    for (var i = 0; i < cleanText.length; i++) {
-        var originalChar = cleanText[i];
-        var lookupIdx = qwertyRow.indexOf(originalChar);
-        if (lookupIdx === -1) lookupIdx = (originalChar.charCodeAt(0) - 65) % qwertyRow.length;
-        
-        dynamicTracker = (numberRow[lookupIdx] * dynamicTracker + (i + 1)) % 5000;
-        if (i > 0 && cleanText[i] === cleanText[i - 1]) {
-            dynamicTracker = (dynamicTracker * (i + 1)) % 5000;
-        }
-        
-        var finalNumberPart = "";
-        var digits = dynamicTracker.toString().split("");
-        for (var d = 0; d < digits.length; d++) {
-            finalNumberPart += (digits[d] === '0') ? 'X' : String.fromCharCode(64 + parseInt(digits[d]));
-        }
+// Helper functions to change array structures into hexadecimal text format
+function bytesToHex(bytes) {
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
 
-        var headerIdx = (dynamicTracker + i) % letterHeaders.length;
-        var currentHeader = letterHeaders[headerIdx];
-        var loopCount = 0;
-        while (usedHeaders[currentHeader] && loopCount < 50) {
-            loopCount++;
-            currentHeader = (currentHeader === 'Z') ? 'A' : String.fromCharCode(currentHeader.charCodeAt(0) + 1);
-        }
-        usedHeaders[currentHeader] = true;
-        
-        ogTokens.push(currentHeader + finalNumberPart);
+function hexToBytes(hex) {
+    var bytes = new Uint8Array(hex.length / 2);
+    for (var i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
     }
+    return bytes;
+}
+
+// QUANTUM-RESISTANT VAULT CONVERT MODULE
+async function runQuantumCipher(input) {
+    var key = await deriveCryptographicKey();
     
-    var intermediateString = ogTokens.join("");
+    // Generate a completely fresh, random 12-byte vector for this specific string execution
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    var encodedText = textToBytes(input);
     
-    // Layer 2: Custom 512-Bit Internal Masking Shield (No External Scripts)
-    var salt = Math.floor(Math.random() * 80) + 15;
-    var finalString = "";
+    var encryptedBuffer = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        encodedText
+    );
     
-    for (var s = 0; s < intermediateString.length; s++) {
-        var code = intermediateString.charCodeAt(s);
-        var shiftKey = numberRow[s % numberRow.length];
-        var scrambled = (code ^ shiftKey) + salt;
-        finalString += scrambled.toString(16).toUpperCase().padStart(3, '0');
-    }
+    var encryptedBytes = new Uint8Array(encryptedBuffer);
     
-    // Format into non-repeating period blocks
-    var prefixHex = salt.toString(16).toUpperCase().padStart(2, '0');
-    var fullPayload = prefixHex + finalString;
+    // Combine the vector data and encrypted text bytes cleanly inside memory
+    var fullPayload = new Uint8Array(iv.length + encryptedBytes.length);
+    fullPayload.set(iv);
+    fullPayload.set(encryptedBytes, iv.length);
+    
+    var rawHexPayload = bytesToHex(fullPayload);
+    
+    // Format output data into continuous non-repeating log chunks separated by periods (.)
     var periodBlocks = [];
-    for (var b = 0; b < fullPayload.length; b += 5) {
-        periodBlocks.push(fullPayload.substring(b, b + 5));
+    for (var b = 0; b < rawHexPayload.length; b += 6) {
+        periodBlocks.push(rawHexPayload.substring(b, b + 6));
     }
-
     return periodBlocks.join(".");
 }
 
-function runVersionXPDecrypter(encryptedMessage) {
-    var cleanPayload = encryptedMessage.split(".").join("");
-    if (cleanPayload.length < 5) return "Error: Invalid data format.";
-    
-    var salt = parseInt(cleanPayload.substring(0, 2), 16);
-    var streamData = cleanPayload.substring(2);
-    var intermediateString = "";
-    
+// QUANTUM-RESISTANT VAULT RESTORE MODULE
+async function runQuantumDecrypter(encryptedMessage) {
     try {
-        var step = 0;
-        for (var s = 0; s < streamData.length; s += 3) {
-            var hexBlock = streamData.substring(s, s + 3);
-            var scrambled = parseInt(hexBlock, 16);
-            var shiftKey = numberRow[step % numberRow.length];
-            var code = (scrambled - salt) ^ shiftKey;
-            intermediateString += String.fromCharCode(code);
-            step++;
-        }
-
-        // Reverse Paradox Chain Matrix
-        var tokens = [];
-        var i = 0;
-        while (i < intermediateString.length) {
-            var header = intermediateString[i];
-            var numPart = "";
-            i++;
-            while (i < intermediateString.length && (intermediateString[i] !== intermediateString[i].toUpperCase() || !isNaN(intermediateString[i]))) {
-                numPart += intermediateString[i];
-                i++;
-                if (intermediateString[i] === 'X' || (intermediateString[i] >= 'A' && intermediateString[i] <= 'I')) {
-                } else {
-                    break;
-                }
-            }
-            tokens.push(header + numPart);
-        }
-
-        var multiplier = tokens.length;
-        var decryptedChars = "";
-        var usedTrackers = [];
-
-        for (var t = 0; t < tokens.length; t++) {
-            var token = tokens[t];
-            var numberPartLetters = token.substring(1).split("");
-            var numStr = "";
-            for (var j = 0; j < numberPartLetters.length; j++) {
-                numStr += (numberPartLetters[j] === 'X') ? "0" : (numberPartLetters[j].charCodeAt(0) - 64).toString();
-            }
-            usedTrackers.push(parseInt(numStr));
-        }
-
-        var currentTracker = multiplier;
-        for (var c = 0; c < usedTrackers.length; c++) {
-            var matchFound = false;
-            for (var n = 0; n < numberRow.length; n++) {
-                var calculatedTarget = (numberRow[n] * currentTracker + (c + 1)) % 5000;
-                
-                if (c > 0 && decryptedChars[c-1] === qwertyRow[n].toLowerCase()) {
-                    calculatedTarget = (calculatedTarget * (c + 1)) % 5000;
-                }
-                
-                if (calculatedTarget === usedTrackers[c]) {
-                    decryptedChars += qwertyRow[n];
-                    currentTracker = calculatedTarget; 
-                    matchFound = true;
-                    break;
-                }
-            }
-            if (!matchFound) {
-                decryptedChars += "?";
-                currentTracker = usedTrackers[c];
-            }
-        }
-        return decryptedChars.toLowerCase();
-
+        var cleanHex = encryptedMessage.split(".").join("");
+        var fullBytes = hexToBytes(cleanHex);
+        
+        // Extract the original 12-byte tracking array from the front of the text stream
+        var iv = fullBytes.slice(0, 12);
+        var encryptedBytes = fullBytes.slice(12);
+        
+        var key = await deriveCryptographicKey();
+        
+        var decryptedBuffer = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            encryptedBytes
+        );
+        
+        return new TextDecoder().decode(decryptedBuffer);
     } catch (e) {
-        return "Error: Secure restoration failed.";
+        return "Error: Secure data verification failed.";
     }
 }
 </script>
