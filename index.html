@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Text Editor</title>
+    <!-- FIX: Embedded Vector Camouflage Favicon to permanently clear 404 console errors -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://w3.org' viewBox='0 0 24 24' fill='%230d6efd'%3E%3Cpath d='M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/%3E%3C/svg%3E">
     <style>
         body { 
             background-color: #ffffff; 
@@ -80,12 +82,20 @@
             min-height: 40px; 
             font-family: monospace;
         }
+        .status-indicator {
+            font-size: 11px;
+            color: #28a745;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Text Editor</h1>
+    <div id="ratchetStatus" class="status-indicator">Engine State: Initialized Base-Vector v15.0</div>
     
     <div class="label">Input text to convert to RTF:</div>
     <textarea id="inputText" placeholder="Type your message here..."></textarea>
@@ -100,8 +110,28 @@
 </div>
 
 <script>
-// YOUR IMMUTABLE SECURE ROOT MATRIX SEED
-var _ogRootSeed = "18-23-20-21-9-1-4-5-17-16-25-15-19";
+var STORAGE_KEY = "WANNABE_XP_RATCHET_STATE";
+var DEFAULT_SEED = "18-23-20-21-9-1-4-5-17-16-25-15-19";
+
+function getActiveRootSeed() {
+    var stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+        localStorage.setItem(STORAGE_KEY, DEFAULT_SEED);
+        return DEFAULT_SEED;
+    }
+    return stored;
+}
+
+async function advanceRootRatchet(currentSeed, varianceFactor) {
+    var combinedInput = currentSeed + "-RATCHET-FACTOR-" + varianceFactor;
+    var msgUint8 = new TextEncoder().encode(combinedInput);
+    var hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+    var hashArray = Array.from(new Uint8Array(hashBuffer));
+    var newSeedHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    
+    localStorage.setItem(STORAGE_KEY, newSeedHex);
+    document.getElementById("ratchetStatus").innerHTML = "Engine State: Ratcheted to Track " + newSeedHex.substring(0, 8);
+}
 
 document.getElementById("convertBtn").addEventListener("click", async function() {
     await executeProcess(true);
@@ -117,9 +147,9 @@ async function executeProcess(isEncoding) {
     
     var result;
     try {
-        result = isEncoding ? await runDynamicEphemeralCipher(textInput) : await runDynamicEphemeralDecrypter(textInput);
+        result = isEncoding ? await runRatchetCipher(textInput) : await runRatchetDecrypter(textInput);
     } catch (e) {
-        result = "Error: Secure transaction synchronization broken.";
+        result = "Error: Secure transaction chain synchronization broken.";
     }
     
     document.getElementById("outputResult").innerHTML = result;
@@ -143,17 +173,16 @@ function hexToBytes(hex) {
     return bytes;
 }
 
-// Generates an airtight master wrapping key from your OG number layout
-async function deriveWrappingKey() {
+async function deriveWrappingKey(activeSeed) {
     var baseKey = await crypto.subtle.importKey(
         "raw", 
-        textToBytes(_ogRootSeed), 
+        textToBytes(activeSeed), 
         { name: "PBKDF2" }, 
         false, 
         ["deriveKey"]
     );
     return await crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt: textToBytes("KEY-WRAP-SALT"), iterations: 50000, hash: "SHA-256" },
+        { name: "PBKDF2", salt: textToBytes("RATCHET-WRAP-SALT"), iterations: 50000, hash: "SHA-256" },
         baseKey,
         { name: "AES-KW", length: 256 },
         false,
@@ -161,16 +190,18 @@ async function deriveWrappingKey() {
     );
 }
 
-// EPHEMERAL HYPER-ENCRYPT CORE ENGINE
-async function runDynamicEphemeralCipher(input) {
-    // 1. Generate a massive, completely random 256-bit ephemeral key from scratch
+async function runRatchetCipher(input) {
+    var activeSeed = getActiveRootSeed();
+    var cleanText = input.toUpperCase().replace(/[^A-Z]/g, '');
+    var multiplier = cleanText.length;
+    if (multiplier === 0) multiplier = input.length;
+
     var massiveEphemeralKey = await crypto.subtle.generateKey(
         { name: "AES-GCM", length: 256 },
         true,
         ["encrypt", "decrypt"]
     );
 
-    // 2. Encrypt the plaintext input data with our massive random key
     var iv = crypto.getRandomValues(new Uint8Array(12));
     var encryptedDataBuffer = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv: iv },
@@ -179,8 +210,7 @@ async function runDynamicEphemeralCipher(input) {
     );
     var encryptedDataBytes = new Uint8Array(encryptedDataBuffer);
 
-    // 3. Encapsulate (wrap) the massive random key using your permanent OG layout seed key
-    var wrappingKey = await deriveWrappingKey();
+    var wrappingKey = await deriveWrappingKey(activeSeed);
     var wrappedKeyBuffer = await crypto.subtle.wrapKey(
         "raw",
         massiveEphemeralKey,
@@ -189,7 +219,6 @@ async function runDynamicEphemeralCipher(input) {
     );
     var wrappedKeyBytes = new Uint8Array(wrappedKeyBuffer);
 
-    // 4. Compact everything into a single aligned memory byte array
     var fullPayload = new Uint8Array(iv.length + wrappedKeyBytes.length + encryptedDataBytes.length);
     fullPayload.set(iv, 0);
     fullPayload.set(wrappedKeyBytes, iv.length);
@@ -197,7 +226,8 @@ async function runDynamicEphemeralCipher(input) {
 
     var rawHexPayload = bytesToHex(fullPayload);
 
-    // 5. Output data parsed cleanly into 6-character segments split by dots (.)
+    await advanceRootRatchet(activeSeed, multiplier);
+
     var periodBlocks = [];
     for (var b = 0; b < rawHexPayload.length; b += 6) {
         periodBlocks.push(rawHexPayload.substring(b, b + 6));
@@ -205,20 +235,17 @@ async function runDynamicEphemeralCipher(input) {
     return periodBlocks.join(".");
 }
 
-// EPHEMERAL REVERSE DECONSTRUCT ENGINE
-async function runDynamicEphemeralDecrypter(encryptedMessage) {
+async function runRatchetDecrypter(encryptedMessage) {
+    var activeSeed = getActiveRootSeed();
     try {
         var cleanHex = encryptedMessage.split(".").join("");
         var fullBytes = hexToBytes(cleanHex);
 
-        // Extract byte boundaries
         var iv = fullBytes.slice(0, 12);
-        // AES-KW wrapping outputs a fixed 40 bytes for a 256-bit key size
         var wrappedKeyBytes = fullBytes.slice(12, 52);
         var encryptedDataBytes = fullBytes.slice(52);
 
-        // 1. Recover the massive ephemeral key using your OG layout key map
-        var wrappingKey = await deriveWrappingKey();
+        var wrappingKey = await deriveWrappingKey(activeSeed);
         var massiveEphemeralKey = await crypto.subtle.unwrapKey(
             "raw",
             wrappedKeyBytes,
@@ -229,16 +256,22 @@ async function runDynamicEphemeralDecrypter(encryptedMessage) {
             ["decrypt"]
         );
 
-        // 2. Unlock the message text payload using the verified ephemeral key
         var decryptedBuffer = await crypto.subtle.decrypt(
             { name: "AES-GCM", iv: iv },
             massiveEphemeralKey,
             encryptedDataBytes
         );
 
-        return new TextDecoder().decode(decryptedBuffer);
+        var plaintextOutput = new TextDecoder().decode(decryptedBuffer);
+        var cleanText = plaintextOutput.toUpperCase().replace(/[^A-Z]/g, '');
+        var multiplier = cleanText.length;
+        if (multiplier === 0) multiplier = plaintextOutput.length;
+
+        await advanceRootRatchet(activeSeed, multiplier);
+
+        return plaintextOutput;
     } catch (e) {
-        return "Error: Secure data verification failed.";
+        return "Error: Secure chain desynchronized. Key alignment invalid.";
     }
 }
 </script>
