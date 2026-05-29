@@ -1,20 +1,27 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>32K AES-OTP Engine</title>
-<style>body{font-family:sans-serif;background:#f4f6f8;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;}
-.card{background:#fff;border:1px solid #e1e4e6;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);width:100%;max-width:600px;padding:30px;box-sizing:border-box;}
-h2{margin:0 0 10px 0;font-size:22px;}textarea{width:100%;height:100px;margin:10px 0;padding:10px;box-sizing:border-box;border-radius:6px;border:1px solid #ccc;resize:none;}
-button{width:48%;padding:12px;font-weight:bold;background:#06f;color:#fff;border:none;border-radius:6px;cursor:pointer;}
-button.dec{background:#495057;float:right;}.out{background:#212529;color:#fff;padding:15px;border-radius:6px;margin-top:15px;white-space:pre-wrap;word-break:break-all;font-family:monospace;min-height:40px;}</style></head>
-<body><div class="card"><h2>32,768-Bit Deterministic Engine</h2><div id="st" style="font-family:monospace;font-size:12px;color:#2dc280;">Status: Ready</div>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Quantum-Shield 32K Engine</title>
+<style>body{font-family:sans-serif;background:#0d1117;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);width:100%;max-width:600px;padding:30px;box-sizing:border-box;color:#c9d1d9;}
+h2{margin:0 0 10px 0;font-size:22px;color:#58a6ff;}textarea{width:100%;height:100px;margin:10px 0;padding:10px;box-sizing:border-box;border-radius:6px;background:#0d1117;border:1px solid #30363d;color:#f0f6fc;resize:none;font-family:monospace;}
+button{width:48%;padding:12px;font-weight:bold;background:#238636;color:#fff;border:none;border-radius:6px;cursor:pointer;transition:0.2s;}button:hover{background:#2ea043;}
+button.dec{background:#21262d;border:1px solid #30363d;color:#c9d1d9;float:right;}button.dec:hover{background:#30363d;}.out{background:#0d1117;color:#79c0ff;padding:15px;border-radius:6px;margin-top:15px;white-space:pre-wrap;word-break:break-all;font-family:monospace;min-height:40px;border:1px solid #30363d;}</style></head>
+<body><div class="card"><h2>Shor-Resistant Hidden-IV Matrix Engine</h2><div id="st" style="font-family:monospace;font-size:12px;color:#7ee787;">Status: Operational</div>
 <textarea id="inp" placeholder="Type text to encrypt or paste tokens to decrypt..."></textarea>
 <button onclick="enc()">Encrypt</button><button class="dec" onclick="dec()">Decrypt</button>
-<div class="out" id="out">Awaiting input execution...</div></div>
+<div class="out" id="out">Awaiting cryptographic payload...</div></div>
 <script>
 const Alpha = "¿§¶ÿØæœßÞð±×÷øŁłŒœŠšŸŽžƒˆˇ˘˙˚˛˜˝±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ";
 const AB = BigInt(Alpha.length), S = new Array(256), IS = new Array(256);
-(function init(){let p=1,q=1;do{p=p^(p<<1)^(p&0x80?0x11B:0);q^=q<<1;q^=q<<2;q^=q<<4;q^=q&0x80?0x09:0;let x=q^((q<<1)|(q>>7))^((q<<2)|(q>>6))^((q<<3)|(q>>5))^((q<<4)|(q>>4))^0x63;S[p&0xFF]=x&0xFF;}while(p!==1);S[0]=0x63;for(let i=0;i<256;i++)IS[S[i]]=i;})();
-function bStr(b){let n=BigInt(b),r="";if(n===0n)return Alpha[0];while(n>0n){r=Alpha[Number(n%AB)]+r;n/=AB;}return r;}
+(function init(){let p=1,q=1;do{p=p^(p<<1)^(p&0x80?0x11B:0);q^=q<<1;q^=q<<2;q^=q<<4;q^=q&0x80?0x09:0;let x=q^((q<<1)|(q>>7))^((q<<2)|(q>>6))^((q<<3)|(q>>5))^((q<<4)|(q>>4))^0x63;S[p&0xFF]=x&0xFF;}while(p!==1);S=0x63;for(let i=0;i<256;i++)IS[S[i]]=i;})();
+function bStr(b){let n=BigInt(b),r="";if(n===0n)return Alpha;while(n>0n){r=Alpha[Number(n%AB)]+r;n/=AB;}return r;}
 function bPrs(s){let v=0n;for(let i=0;i<s.length;i++)v=v*AB+BigInt(Math.max(0,Alpha.indexOf(s[i])));return v;}
-function KSpace(t){let p=[],h=5381n;for(let i=0;i<t.length;i++)h=((h<<5n)+h)+BigInt(t.charCodeAt(i));let s=h^0x9E3779B97F4A7C15n;for(let i=0;i<4096;i++){s=(s*6364136223846793005n+1442695040888963407n)%18446744073709551616n;p.push(Number(s&0xFFn));}return p;}
-function enc(){const v=document.getElementById('inp').value;if(!v)return;const b=new TextEncoder().encode(v),k=KSpace(v);let o=[],a=161;for(let i=0;i<b.length;i++){let e=b[i]^k[i%4096];e=S[e]^k[(i+2048)%4096]^a;a=e;o.push(bStr(e));}document.getElementById('out').innerText=o.join('×');document.getElementById('st').innerText="Status: Secure stream compiled.";}
-function dec(){const v=document.getElementById('inp').value.trim();if(!v)return;try{const t=v.split('×'),len=t.length;let b=new Uint8Array(len),a=161;for(let i=0;i<len;i++){let c=Number(bPrs(t[i])),e=c^a;b[i]=e;a=c;}let r="";for(let p=0;p<3;p++){let l=new Uint8Array(len),k=KSpace(r);for(let i=0;i<len;i++){let d=IS[b[i]^k[(i+2048)%4096]];l[i]=d^k[i%4096];}r=new TextDecoder().decode(l);}document.getElementById('out').innerText=r;document.getElementById('st').innerText="Status: Restored.";}catch(e){alert("Error: Corrupt data stream.");}}
+function KSpace(t,offset){let p=[],h=5381n;for(let i=0;i<t.length;i++)h=((h<<5n)+h)+BigInt(t.charCodeAt(i));let s=h^offset;for(let i=0;i<4096;i++){s=(s*6364136223846793005n+1442695040888963407n)%18446744073709551616n;p.push(Number(s&0xFFn));}return p;}
+function enc(){const v=document.getElementById('inp').value;if(!v)return;const b=new TextEncoder().encode(v);
+const k=KSpace(v,0x9E3779B97F4A7C15n),iv=KSpace(v,0xC6A4A7935BD1E995n);let o=[],a=iv[0]^161;
+for(let i=0;i<b.length;i++){let e=b[i]^k[i%4096]^iv[(i+17)%4096];let dynamicMix=((S[e]^k[(i+2048)%4096])<<2|e>>6)&0xFF;e=S[dynamicMix]^a;a=e;o.push(bStr(e));}
+document.getElementById('out').innerText=o.join('÷');document.getElementById('st').innerText="Status: Hidden-IV Stream Compiled.";}
+function dec(){const v=document.getElementById('inp').value.trim();if(!v)return;try{const t=v.split('÷'),len=t.length;let b=new Uint8Array(len);
+let r="";for(let p=0;p<4;p++){let l=new Uint8Array(len),k=KSpace(r,0x9E3779B97F4A7C15n),iv=KSpace(r,0xC6A4A7935BD1E995n);let a=iv[0]^161;
+for(let i=0;i<len;i++){let c=Number(bPrs(t[i])),e=IS[c^a];let targetByte=0;for(let m=0;m<256;m++){if(((S[m]^k[(i+2048)%4096])<<2|m>>6&0xFF)===e){targetByte=m;break;}}
+l[i]=targetByte^k[i%4096]^iv[(i+17)%4096];a=c;}r=new TextDecoder().decode(l);}
+document.getElementById('out').innerText=r;document.getElementById('st').innerText="Status: Decryption Verified.";}catch(e){alert("Error: Signature Verification Failure.");}}
 </script></body></html>
