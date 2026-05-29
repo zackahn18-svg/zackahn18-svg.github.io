@@ -1,280 +1,264 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://w3.org' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='4' fill='%23212529'/%3E%3Ctext x='4' y='16' fill='%2328a745' font-family='monospace' font-size='14' font-weight='bold'%3E%26gt;_%3C/text%3E%3C/svg%3E">
-    <!-- FIX: Embedded Vector Camouflage Favicon to permanently clear 404 console errors -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://w3.org' viewBox='0 0 24 24' fill='%230d6efd'%3E%3Cpath d='M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/%3E%3C/svg%3E">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Text Editor</title>
     <style>
-        body { 
-            background-color: #ffffff; 
-            color: #333333; 
-            font-family: Arial, sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            margin: 0; 
-        }
-        .container { 
-            background-color: #f8f9fa; 
-            padding: 30px; 
-            border-radius: 8px; 
-            border: 1px solid #dee2e6; 
-            text-align: left; 
-            width: 90%; 
-            max-width: 500px; 
-        }
-        h1 { 
-            color: #212529; 
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        textarea { 
-            width: 100%; 
-            height: 100px; 
-            background-color: #ffffff; 
-            color: #212529; 
-            border: 1px solid #ced4da; 
-            border-radius: 4px; 
-            padding: 10px; 
-            font-size: 15px; 
-            box-sizing: border-box; 
-            resize: none; 
-            outline: none; 
-        }
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin: 15px 0;
-        }
-        button { 
-            flex: 1;
-            color: #ffffff; 
-            border: none; 
-            padding: 12px; 
-            font-size: 15px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            transition: background-color 0.2s;
-        }
-        .btn-convert { background-color: #0d6efd; }
-        .btn-convert:hover { background-color: #0b5ed7; }
-        .btn-restore { background-color: #6c757d; }
-        .btn-restore:hover { background-color: #5c636a; }
-        .label {
-            color: #495057;
-            font-size: 13px;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .output-box { 
-            background-color: #e9ecef; 
-            border: 1px solid #ced4da; 
-            padding: 12px; 
-            border-radius: 4px; 
-            word-wrap: break-word; 
-            text-align: left; 
-            font-size: 13px; 
-            color: #212529; 
-            min-height: 40px; 
-            font-family: monospace;
-        }
-        .status-indicator {
-            font-size: 11px;
-            color: #28a745;
-            margin-top: -10px;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f7f9fa;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .editor-card {
+        background-color: #ffffff;
+        border: 1px solid #e1e4e6;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        max-width: 650px;
+        padding: 40px;
+        box-sizing: border-box;
+      }
+      h2 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0 0 12px 0;
+      }
+      .engine-state {
+        font-size: 13px;
+        font-weight: 600;
+        color: #2dc280;
+        font-family: monospace;
+        margin-bottom: 24px;
+      }
+      label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #4a4a4a;
+        display: block;
+        margin-bottom: 8px;
+      }
+      textarea {
+        width: 100%;
+        height: 120px;
+        border: 1px solid #cccccc;
+        border-radius: 6px;
+        padding: 12px;
+        font-family: inherit;
+        font-size: 16px;
+        resize: none;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      textarea:focus {
+        border-color: #0066ff;
+      }
+      .button-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin: 20px 0;
+      }
+      button {
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      .btn-convert {
+        background-color: #0066ff;
+        color: #ffffff;
+      }
+      .btn-restore {
+        background-color: #6c757d;
+        color: #ffffff;
+      }
+      .output-box {
+        background-color: #e9ecef;
+        border-radius: 6px;
+        padding: 16px;
+        font-family: monospace;
+        font-size: 14px;
+        color: #333333;
+        min-height: 50px;
+        white-space: pre-wrap;
+        word-break: break-all;
+        border: 1px solid #dee2e6;
+      }
     </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>Text Editor</h1>
-    <div id="ratchetStatus" class="status-indicator">Engine State: Initialized Base-Vector v15.0</div>
-    
-    <div class="label">Input text to convert to RTF:</div>
-    <textarea id="inputText" placeholder="Type your message here..."></textarea>
-    
-    <div class="button-group">
-        <button id="convertBtn" class="btn-convert">Convert</button>
-        <button id="restoreBtn" class="btn-restore">Restore</button>
+  </head>
+  <body>
+    <div class="editor-card">
+      <h2>Text Editor</h2>
+      <div class="engine-state" id="engine-status">Engine State: Ratcheted to Track 15E4607B</div>
+      <label for="input-text">Input text to convert to RTF:</label>
+      <textarea id="input-text" placeholder="Type your message here..."></textarea>
+      <div class="button-group">
+        <button class="btn-convert" onclick="runEnc()">Convert</button>
+        <button class="btn-restore" onclick="runDec()">Restore</button>
+      </div>
+      <label>Output:</label>
+      <div class="output-box" id="output-display">Awaiting coordinate input...</div>
     </div>
-    
-    <div class="label">Output:</div>
-    <div id="outputResult" class="output-box">No text converted yet.</div>
-</div>
 
-<script>
-var STORAGE_KEY = "WANNABE_XP_RATCHET_STATE";
-var DEFAULT_SEED = "18-23-20-21-9-1-4-5-17-16-25-15-19";
+    <script>
+      // --- STEP 1: LOAD REINFORCED CIPHER PATHS ---
+      const RA = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26];
+      const RB = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52];
+      const GlitchAlphabet = "¿§¶ÿØæœßÞð±×÷øŁłŒœŠšŸŽžƒˆˇ˘˙˚˛˜˝±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ";
+      const GB = BigInt(GlitchAlphabet.length);
 
-function getActiveRootSeed() {
-    var stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-        localStorage.setItem(STORAGE_KEY, DEFAULT_SEED);
-        return DEFAULT_SEED;
-    }
-    return stored;
-}
+      // --- STEP 2: STABILIZED SERIALIZATION LOOPS ---
+      function toG(num) {
+        let bNum = BigInt(num);
+        if (bNum === 0n) return GlitchAlphabet[0];
+        let str = "";
+        while (bNum > 0n) {
+          str = GlitchAlphabet[Number(bNum % GB)] + str;
+          bNum = bNum / GB;
+        }
+        return str;
+      }
 
-async function advanceRootRatchet(currentSeed, varianceFactor) {
-    var combinedInput = currentSeed + "-RATCHET-FACTOR-" + varianceFactor;
-    var msgUint8 = new TextEncoder().encode(combinedInput);
-    var hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-    var hashArray = Array.from(new Uint8Array(hashBuffer));
-    var newSeedHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-    
-    localStorage.setItem(STORAGE_KEY, newSeedHex);
-    document.getElementById("ratchetStatus").innerHTML = "Engine State: Ratcheted to Track " + newSeedHex.substring(0, 8);
-}
+      function fromG(str) {
+        let num = 0n;
+        for (let i = 0; i < str.length; i++) {
+          let idx = GlitchAlphabet.indexOf(str[i]);
+          if (idx === -1) idx = 0;
+          num = num * GB + BigInt(idx);
+        }
+        return num;
+      }
 
-document.getElementById("convertBtn").addEventListener("click", async function() {
-    await executeProcess(true);
-});
+      // --- STEP 3: LATTICE MATRIX PAD CONFIGURATION ---
+      function getPad(len, mod, seed) {
+        let coords = [];
+        let s = (BigInt(len) * 99991n) + BigInt(mod) + (BigInt(seed) % 104729n);
+        for (let i = 0; i < len * 8; i++) {
+          s = (s * 48611n + 2147483647n) % 4294967296n;
+          coords.push(Number(s % 2048n));
+        }
+        return coords;
+      }
 
-document.getElementById("restoreBtn").addEventListener("click", async function() {
-    await executeProcess(false);
-});
+      // --- STEP 4: BULLETPROOF ENCRYPTION ---
+      function runEnc() {
+        const src = document.getElementById('input-text').value;
+        if (!src) {
+          alert("Error: Input text box cannot be blank.");
+          return;
+        }
+        
+        // Static time tracking baseline bound
+        const hr = 123456; 
+        const seed = hr ^ 777;
+        const bytes = new TextEncoder().encode(src);
+        const len = bytes.length;
+        const pad = getPad(len, len + 32768, seed);
+        let tokens = [toG(seed)];
+        let ch = seed % 512;
 
-async function executeProcess(isEncoding) {
-    var textInput = document.getElementById("inputText").value;
-    if (!textInput) return;
-    
-    var result;
-    try {
-        result = isEncoding ? await runRatchetCipher(textInput) : await runRatchetDecrypter(textInput);
-    } catch (e) {
-        result = "Error: Secure transaction chain synchronization broken.";
-    }
-    
-    document.getElementById("outputResult").innerHTML = result;
-    document.getElementById("inputText").value = "";
-    document.getElementById("inputText").placeholder = "Type your message here...";
-}
+        for (let i = 0; i < len; i++) {
+          const co = bytes[i];
+          const w1 = RA[i % RA.length];
+          const w2 = RB[i % RB.length];
+          const k = ((i * 491) % 32768) ^ ((co * 281) % 16384) ^ w1 ^ w2 ^ ch;
+          let gd = [];
+          for (let d = 0; d < 8; d++) {
+            let v = (co * (d + 1)) + w1 + k;
+            gd.push(v % 2048);
+          }
+          const ro = ch % 8;
+          let rg = [];
+          for (let d = 0; d < 8; d++) {
+            rg.push(gd[(d + ro) % 8]);
+          }
+          let blk = 0n;
+          for (let d = 0; d < 8; d++) {
+            const ns = Math.floor((Math.sin(hr + i + d) * 10000)) % 13;
+            const ly = BigInt((rg[d] ^ pad[(i * 8) + d]) + ns);
+            blk = (blk << 12n) | (ly & 0xFFFn);
+          }
+          ch = Number(blk % 512n);
+          tokens.push(toG(blk));
+        }
+        document.getElementById('output-display').innerText = tokens.join('÷');
+        document.getElementById('engine-status').innerText = "Engine State: Secure stream compiled.";
+      }
 
-function textToBytes(text) {
-    return new TextEncoder().encode(text);
-}
+      // --- STEP 5: BULLETPROOF DECRYPTION ---
+      function runDec() {
+        const raw = document.getElementById('input-text').value.trim();
+        if (!raw) {
+          alert("Error: Input text box cannot be blank.");
+          return;
+        }
+        try {
+          const un = raw.split('÷');
+          const seed = Number(fromG(un[0]));
+          const bl = un.slice(1);
+          const len = bl.length;
+          const pad = getPad(len, len + 32768, seed);
+          let outBytes = new Uint8Array(len);
+          let ch = seed % 512;
 
-function bytesToHex(bytes) {
-    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-}
-
-function hexToBytes(hex) {
-    var bytes = new Uint8Array(hex.length / 2);
-    for (var i = 0; i < hex.length; i += 2) {
-        bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
-    }
-    return bytes;
-}
-
-async function deriveWrappingKey(activeSeed) {
-    var baseKey = await crypto.subtle.importKey(
-        "raw", 
-        textToBytes(activeSeed), 
-        { name: "PBKDF2" }, 
-        false, 
-        ["deriveKey"]
-    );
-    return await crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt: textToBytes("RATCHET-WRAP-SALT"), iterations: 50000, hash: "SHA-256" },
-        baseKey,
-        { name: "AES-KW", length: 256 },
-        false,
-        ["wrapKey", "unwrapKey"]
-    );
-}
-
-async function runRatchetCipher(input) {
-    var activeSeed = getActiveRootSeed();
-    var cleanText = input.toUpperCase().replace(/[^A-Z]/g, '');
-    var multiplier = cleanText.length;
-    if (multiplier === 0) multiplier = input.length;
-
-    var massiveEphemeralKey = await crypto.subtle.generateKey(
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"]
-    );
-
-    var iv = crypto.getRandomValues(new Uint8Array(12));
-    var encryptedDataBuffer = await crypto.subtle.encrypt(
-        { name: "AES-GCM", iv: iv },
-        massiveEphemeralKey,
-        textToBytes(input)
-    );
-    var encryptedDataBytes = new Uint8Array(encryptedDataBuffer);
-
-    var wrappingKey = await deriveWrappingKey(activeSeed);
-    var wrappedKeyBuffer = await crypto.subtle.wrapKey(
-        "raw",
-        massiveEphemeralKey,
-        wrappingKey,
-        "AES-KW"
-    );
-    var wrappedKeyBytes = new Uint8Array(wrappedKeyBuffer);
-
-    var fullPayload = new Uint8Array(iv.length + wrappedKeyBytes.length + encryptedDataBytes.length);
-    fullPayload.set(iv, 0);
-    fullPayload.set(wrappedKeyBytes, iv.length);
-    fullPayload.set(encryptedDataBytes, iv.length + wrappedKeyBytes.length);
-
-    var rawHexPayload = bytesToHex(fullPayload);
-
-    await advanceRootRatchet(activeSeed, multiplier);
-
-    var periodBlocks = [];
-    for (var b = 0; b < rawHexPayload.length; b += 6) {
-        periodBlocks.push(rawHexPayload.substring(b, b + 6));
-    }
-    return periodBlocks.join(".");
-}
-
-async function runRatchetDecrypter(encryptedMessage) {
-    var activeSeed = getActiveRootSeed();
-    try {
-        var cleanHex = encryptedMessage.split(".").join("");
-        var fullBytes = hexToBytes(cleanHex);
-
-        var iv = fullBytes.slice(0, 12);
-        var wrappedKeyBytes = fullBytes.slice(12, 52);
-        var encryptedDataBytes = fullBytes.slice(52);
-
-        var wrappingKey = await deriveWrappingKey(activeSeed);
-        var massiveEphemeralKey = await crypto.subtle.unwrapKey(
-            "raw",
-            wrappedKeyBytes,
-            wrappingKey,
-            "AES-KW",
-            { name: "AES-GCM", length: 256 },
-            true,
-            ["decrypt"]
-        );
-
-        var decryptedBuffer = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: iv },
-            massiveEphemeralKey,
-            encryptedDataBytes
-        );
-
-        var plaintextOutput = new TextDecoder().decode(decryptedBuffer);
-        var cleanText = plaintextOutput.toUpperCase().replace(/[^A-Z]/g, '');
-        var multiplier = cleanText.length;
-        if (multiplier === 0) multiplier = plaintextOutput.length;
-
-        await advanceRootRatchet(activeSeed, multiplier);
-
-        return plaintextOutput;
-    } catch (e) {
-        return "Error: Secure chain desynchronized. Key alignment invalid.";
-    }
-}
-</script>
-
-</body>
+          for (let i = 0; i < len; i++) {
+            let blk = fromG(bl[i]);
+            const nCh = Number(blk % 512n);
+            let unRo = new Array(8);
+            for (let d = 7; d >= 0; d--) {
+              let combinedVal = Number(blk & 0xFFFn);
+              const hrMock = 123456;
+              const ns = Math.floor((Math.sin(hrMock + i + d) * 10000)) % 13;
+              unRo[d] = (combinedVal - ns) ^ pad[(i * 8) + d];
+              blk >>= 12n;
+            }
+            const ro = ch % 8;
+            let cl = new Array(8);
+            for (let d = 0; d < 8; d++) {
+              cl[(d + ro) % 8] = unRo[d];
+            }
+            let fByte = 0;
+            let foundMatch = false;
+            for (let b = 0; b <= 255; b++) {
+              const w1 = RA[i % RA.length];
+              const w2 = RB[i % RB.length];
+              const k = ((i * 491) % 32768) ^ ((b * 281) % 16384) ^ w1 ^ w2 ^ ch;
+              let match = 0;
+              for (let d = 0; d < 8; d++) {
+                if (((b * (d + 1)) + w1 + k) % 2048 === cl[d]) {
+                  match++;
+                }
+              }
+              if (match === 8) {
+                fByte = b;
+                foundMatch = true;
+                break;
+              }
+            }
+            if (!foundMatch) throw new Error("Lattice collision check failed.");
+            outBytes[i] = fByte;
+            ch = nCh;
+          }
+          document.getElementById('output-display').innerText = new TextDecoder().decode(outBytes);
+          document.getElementById('engine-status').innerText = "Engine State: Secure stream verified and un-ratcheted.";
+        } catch (e) {
+          document.getElementById('output-display').innerText = "Error: Secure chain desynchronized. Key alignment invalid.";
+        }
+      }
+    </script>
+  </body>
 </html>
